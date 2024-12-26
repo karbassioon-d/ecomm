@@ -2,7 +2,7 @@ const Cart = require('../models/cartModel');
 
 const getCart = async (req, res) => {
     try {
-        const cart = await Cart.findOne({ userId: requestAnimationFrame.user.id }).populate('items.productId');
+        const cart = await Cart.findOne({ userId: req.user.id }).populate('items.productId');
 
         if (!cart) {
             return res.status(404).json({ message: 'Cart not found' });
@@ -45,4 +45,30 @@ const addToCart = async (req, res) => {
     }
 }
 
-module.exports = { getCart, addToCart };
+const deleteFromCart = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const cart = await Cart.findOne({ userId: req.user.id });
+
+        if (!cart) {
+            return res.status(404).json({ message: 'Cart not found' });
+        }
+
+        const itemIndex = cart.items.findIndex(item => item._id.toString() === id);
+
+        if (itemIndex === -1) {
+            return res.status(404).json({ message: 'Item not found in cart' });
+        }
+
+        cart.items.splice(itemIndex, 1);
+        await cart.save();
+
+        res.json({ message: 'Item removed from cart', cart });
+    } catch (error) {
+        console.error('Error deleting from cart:', error);
+        res.status(500).json({ message: 'Error deleting from cart' });
+    }
+};
+
+module.exports = { getCart, addToCart, deleteFromCart };
