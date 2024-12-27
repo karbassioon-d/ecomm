@@ -1,4 +1,4 @@
-const Order = require('../modles/orderModel');
+const Order = require('../models/orderModel');
 const Cart = require('../models/cartModel');
 
 const createOrder = async (req, res) => {
@@ -24,4 +24,19 @@ const createOrder = async (req, res) => {
     }
 };
 
-module.exports = { createOrder };
+const getUserOrders = async (req, res) => {
+    try {
+        const orders = await Order.find({ userId: req.user.id }).sort({ createdAt: -1 });
+
+        if (!orders.length) {
+            return res.status(404).json({ message: 'No orders found' });
+        }
+
+        res.json(orders);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error getting orders' });
+    }
+};
+
+module.exports = { createOrder, getUserOrders };
